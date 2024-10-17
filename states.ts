@@ -1,38 +1,98 @@
 
-/**
-* Use this file to define custom functions and blocks.
-* Read more at https://makecode.microbit.org/blocks/custom
-*/
+//% color=#0fbc11
+namespace states {
+    
+    const NONE = "__none__";
 
-enum MyEnum {
-    //% block="one"
-    One,
-    //% block="two"
-    Two
-}
-
-/**
- * Custom blocks
- */
-//% weight=100 color=#0fbc11 icon=""
-namespace custom {
-    /**
-     * TODO: describe your function here
-     * @param n describe parameter here, eg: 5
-     * @param s describe parameter here, eg: "Hello"
-     * @param e describe parameter here
-     */
-    //% block
-    export function foo(n: number, s: string, e: MyEnum): void {
-        // Add code here
+    //% block="when state is $name"
+    //% handlerStatement=1
+    //% expandableArgumentMode="enabled"
+    //% draggableParameters="reporter"
+    //% name.defl="default"
+    export function defaultAddState(name: string, handleEnter: () => void) {
+        defaultStateMachine.addState({ name, handleEnter });
     }
 
-    /**
-     * TODO: describe your function here
-     * @param value describe value here, eg: 5
-     */
-    //% block
-    export function fib(value: number): number {
-        return value <= 1 ? value : fib(value -1) + fib(value - 2);
+    //% block="set state to $name"
+    //% name.defl="default"
+    export function defaulSetState(name: string) {
+        defaultStateMachine.setState(name);
     }
+
+    //% block="current state"
+    export function deafultGetState() {
+        return defaultStateMachine.getState();
+    }
+
+    //% block="previous state"
+    export function deafultGetPrevious() {
+        return defaultStateMachine.getPrevious();
+    }
+
+    export type StateProps = {
+        name: string;
+        handleEnter: () => void;
+    }
+
+    export class State {
+        _props: StateProps;
+        constructor(props: StateProps) {
+            this._props = props;
+        }
+
+        get name() {
+            return this._props.name;
+        }
+
+        enter() {
+            this._props.handleEnter();
+        }
+    }
+
+    export class StateMachine {
+        _states: {[key: string]: State};
+        _currentState: State;
+        _previousState: State;
+
+        constructor() {
+            this._states = {};
+            this.addState({
+                name: NONE,
+                handleEnter: () => {}
+            });
+            this.setState(NONE);
+        }
+
+        addState(props: StateProps) {
+            this._states[props.name] = new State(props);
+        }
+
+        getState() {
+            if (!this._currentState) return NONE
+            return this._currentState.name;
+        }
+
+        getPrevious() {
+            if (!this._previousState) return NONE
+            return this._previousState.name;
+        }
+
+        setState(name: string) {
+            const previous = this._currentState;
+            if (previous && previous.name === name) return;
+            const next = this._states[name];
+            if (!next) {
+                // TODO: Warn?
+                return;
+            };
+            this._currentState = next;
+            this._previousState = previous;
+            next.enter();
+        }
+    }
+
+    export const defaultStateMachine = new StateMachine();
+
+
+    
 }
