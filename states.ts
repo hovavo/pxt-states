@@ -24,8 +24,14 @@ namespace states {
 
     //% block="when state is $id"
     //% id.shadow="state_enum_shim"
-    export function defaultAddState(id: number, handleEnter: () => void) {
-        defaultStateMachine.addState({ id, handleEnter });
+    export function defaultAddStateEnter(id: number, handleEnter: () => void) {
+        defaultStateMachine.updateOrAddState({ id, handleEnter });
+    }
+
+    //% block="when state exits $id"
+    //% id.shadow="state_enum_shim"
+    export function defaultAddStateExit(id: number, handleExit: () => void) {
+        defaultStateMachine.updateOrAddState({ id, handleExit });
     }
 
     //% block="set state to $id"
@@ -53,12 +59,15 @@ namespace states {
 
     export type StateProps = {
         id: number;
-        handleEnter: () => void;
+        handleEnter?: () => void;
+        handleExit?: () => void;
     }
 
     export class State {
         _props: StateProps;
         constructor(props: StateProps) {
+            props.handleEnter = props.handleEnter || (() => {});
+            props.handleExit = props.handleExit || (() => {});
             this._props = props;
         }
 
@@ -68,6 +77,15 @@ namespace states {
 
         enter() {
             this._props.handleEnter();
+        }
+
+        exit() {
+            this._props.handleExit();
+        }
+
+        updateProps(props:StateProps) {
+            this._props.handleEnter = props.handleEnter || this._props.handleEnter;
+            this._props.handleExit = props.handleExit || this._props.handleExit;
         }
     }
 
@@ -81,13 +99,22 @@ namespace states {
             this._states = {};
             this.addState({
                 id: NONE,
-                handleEnter: () => {}
+                handleEnter: () => {},
+                handleExit: () => { },
             });
             this.setState(NONE);
         }
 
         addState(props: StateProps) {
             this._states[props.id] = new State(props);
+        }
+
+        updateOrAddState(props: StateProps) {
+            if (this.has(props.id)) {
+                this._states[props.id].updateProps(props);
+            } else {
+                this.addState(props);
+            }
         }
 
         get currentId () { 
@@ -114,6 +141,7 @@ namespace states {
             };
             this._currentState = next;
             this._previousState = previous;
+            if (previous) previous.exit();
             next.enter();
             this._changeHandler();
         }
@@ -124,6 +152,10 @@ namespace states {
 
         matchPrevious(id: number) {
             return this.previousId === id;
+        }
+
+        has(id: number) {
+           return !!this._states[id]; 
         }
     }
 
