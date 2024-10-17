@@ -2,35 +2,55 @@
 //% color=#0fbc11
 namespace states {
     
-    const NONE = "__none__";
+    const NONE = -1;
 
-    //% block="when state is $name"
+    //% shim=ENUM_GET
+    //% blockId=state_enum_shim
+    //% block="$arg"
+    //% enumName="States"
+    //% enumMemberName="state"
+    //% enumPromptHint="e.g. Waiting, Ready, ..."
+    //% enumInitialMembers="Default"
+    export function _stateEnumShim(arg: number) {
+        return arg;
+    }
+
+    //% blockId=log_state
+    //% block="log $state"
+    //% state.shadow="state_enum_shim"
+    export function logState(state: number) {
+        console.log(state);
+    }
+
+    //% block="when state is $id"
     //% handlerStatement=1
     //% expandableArgumentMode="enabled"
     //% draggableParameters="reporter"
-    //% name.defl="default"
-    export function defaultAddState(name: string, handleEnter: () => void) {
-        defaultStateMachine.addState({ name, handleEnter });
+    //% id.shadow="state_enum_shim"
+    export function defaultAddState(id: number, handleEnter: () => void) {
+        defaultStateMachine.addState({ id, handleEnter });
     }
 
-    //% block="set state to $name"
-    //% name.defl="default"
-    export function defaulSetState(name: string) {
-        defaultStateMachine.setState(name);
+    //% block="set state to $id"
+    //% id.shadow="state_enum_shim"
+    export function defaulSetState(id: number) {
+        defaultStateMachine.setState(id);
     }
 
-    //% block="current state"
-    export function deafultGetState() {
-        return defaultStateMachine.getState();
+    //% block="state is $id"
+    //% id.shadow="state_enum_shim"
+    export function defaultMatchCurrent(id: number) {
+        return defaultStateMachine.matchCurrent(id);
     }
 
-    //% block="previous state"
-    export function deafultGetPrevious() {
-        return defaultStateMachine.getPrevious();
+    //% block="previous state was $id"
+    //% id.shadow="state_enum_shim"
+    export function defaultMatchPrevious(id: number) {
+        return defaultStateMachine.matchPrevious(id);
     }
 
     export type StateProps = {
-        name: string;
+        id: number;
         handleEnter: () => void;
     }
 
@@ -40,8 +60,8 @@ namespace states {
             this._props = props;
         }
 
-        get name() {
-            return this._props.name;
+        get id() {
+            return this._props.id;
         }
 
         enter() {
@@ -50,37 +70,37 @@ namespace states {
     }
 
     export class StateMachine {
-        _states: {[key: string]: State};
+        _states: {[key: number]: State};
         _currentState: State;
         _previousState: State;
 
         constructor() {
             this._states = {};
             this.addState({
-                name: NONE,
+                id: NONE,
                 handleEnter: () => {}
             });
             this.setState(NONE);
         }
 
         addState(props: StateProps) {
-            this._states[props.name] = new State(props);
+            this._states[props.id] = new State(props);
         }
 
-        getState() {
+        get currentId () { 
             if (!this._currentState) return NONE
-            return this._currentState.name;
+            return this._currentState.id;
         }
 
-        getPrevious() {
+        get previousId() {
             if (!this._previousState) return NONE
-            return this._previousState.name;
+            return this._previousState.id;
         }
 
-        setState(name: string) {
+        setState(id: number) {
             const previous = this._currentState;
-            if (previous && previous.name === name) return;
-            const next = this._states[name];
+            if (previous && previous.id === id) return;
+            const next = this._states[id];
             if (!next) {
                 // TODO: Warn?
                 return;
@@ -88,6 +108,14 @@ namespace states {
             this._currentState = next;
             this._previousState = previous;
             next.enter();
+        }
+
+        matchCurrent(id: number) {
+            return this.currentId === id;
+        }
+
+        matchPrevious(id: number) {
+            return this.previousId === id;
         }
     }
 
