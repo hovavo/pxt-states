@@ -15,46 +15,45 @@ namespace states {
         return arg;
     }
 
-    //% blockId=log_state
-    //% block="log $state"
-    //% state.shadow="state_enum_shim"
-    export function logState(state: number) {
-        console.log(state);
-    }
-
     //% block="when state is $id"
     //% id.shadow="state_enum_shim"
+    //% weight=100
     export function defaultAddStateEnter(id: number, handleEnter: () => void) {
         defaultStateMachine.updateOrAddState({ id, handleEnter });
     }
 
-    //% block="when state exits $id"
-    //% id.shadow="state_enum_shim"
-    export function defaultAddStateExit(id: number, handleExit: () => void) {
-        defaultStateMachine.updateOrAddState({ id, handleExit });
-    }
-
     //% block="set state to $id"
     //% id.shadow="state_enum_shim"
+    //% weight=90
     export function defaulSetState(id: number) {
         defaultStateMachine.setState(id);
     }
 
+    //% block="when state exits $id"
+    //% id.shadow="state_enum_shim"
+    //% weight=80
+    export function defaultAddStateExit(id: number, handleExit: () => void) {
+        defaultStateMachine.updateOrAddState({ id, handleExit });
+    }
+
+    //% block="on state change"
+    //% weight=70
+    export function defaultSetHandler(handler: () => void) {
+        defaultStateMachine.setChangeHandler(handler);
+    }
+
     //% block="state is $id"
     //% id.shadow="state_enum_shim"
+    //% weight=60
     export function defaultMatchCurrent(id: number) {
         return defaultStateMachine.matchCurrent(id);
     }
 
     //% block="previous state was $id"
     //% id.shadow="state_enum_shim"
+    //% weight=55
     export function defaultMatchPrevious(id: number) {
         return defaultStateMachine.matchPrevious(id);
-    }
-
-    //% block="on state change"
-    export function defaultSetHandler(handler: () => void) {
-        defaultStateMachine.setChangeHandler(handler);
     }
 
     export type StateProps = {
@@ -160,7 +159,4 @@ namespace states {
     }
 
     export const defaultStateMachine = new StateMachine();
-
-
-    
 }
