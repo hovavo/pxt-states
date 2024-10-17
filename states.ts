@@ -23,9 +23,6 @@ namespace states {
     }
 
     //% block="when state is $id"
-    //% handlerStatement=1
-    //% expandableArgumentMode="enabled"
-    //% draggableParameters="reporter"
     //% id.shadow="state_enum_shim"
     export function defaultAddState(id: number, handleEnter: () => void) {
         defaultStateMachine.addState({ id, handleEnter });
@@ -47,6 +44,11 @@ namespace states {
     //% id.shadow="state_enum_shim"
     export function defaultMatchPrevious(id: number) {
         return defaultStateMachine.matchPrevious(id);
+    }
+
+    //% block="on state change"
+    export function defaultSetHandler(handler: () => void) {
+        defaultStateMachine.setChangeHandler(handler);
     }
 
     export type StateProps = {
@@ -73,6 +75,7 @@ namespace states {
         _states: {[key: number]: State};
         _currentState: State;
         _previousState: State;
+        _changeHandler = () => {};
 
         constructor() {
             this._states = {};
@@ -97,6 +100,10 @@ namespace states {
             return this._previousState.id;
         }
 
+        setChangeHandler(handler: () => void) {
+            this._changeHandler = handler;
+        }
+
         setState(id: number) {
             const previous = this._currentState;
             if (previous && previous.id === id) return;
@@ -108,6 +115,7 @@ namespace states {
             this._currentState = next;
             this._previousState = previous;
             next.enter();
+            this._changeHandler();
         }
 
         matchCurrent(id: number) {
