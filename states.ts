@@ -17,7 +17,7 @@ namespace states {
         return arg;
     }
 
-    //% block="once state is $id"
+    //% block="on $id"
     //% id.shadow="state_enum_shim"
     //% weight=100
     //% group="Main state"
@@ -25,7 +25,7 @@ namespace states {
         defaultStateMachine.setStateEnter(id, handleEnter);
     }
 
-    //% block="set state to $id"
+    //% block="go to $id"
     //% id.shadow="state_enum_shim"
     //% weight=90
     //% group="Main state"
@@ -33,7 +33,7 @@ namespace states {
         defaultStateMachine.setState(id);
     }
 
-    //% block="when state exits $id"
+    //% block="after $id"
     //% id.shadow="state_enum_shim"
     //% weight=80
     //% group="Main state"
@@ -41,7 +41,7 @@ namespace states {
         defaultStateMachine.setStateExit(id, handleExit);
     }
 
-    //% block="while state is $id"
+    //% block="while $id"
     //% id.shadow="state_enum_shim"
     //% weight=85
     //% group="Main state"
