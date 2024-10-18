@@ -42,6 +42,7 @@ namespace states {
     }
 
     //% block="while $id"
+    //% blockAllowMultiple=1
     //% id.shadow="state_enum_shim"
     //% weight=85
     //% group="Main state"
@@ -72,6 +73,13 @@ namespace states {
         return defaultStateMachine.matchPrevious(id);
     }
 
+    //% block="running time"
+    //% weight=55
+    //% group="Main state"
+    export function defaultRunningTime() {
+        return defaultStateMachine.runningTime;
+    }
+
     //% block="new state machine"
     //% blockSetVariable=myStateMachine
     //% group="Custom states"
@@ -93,6 +101,8 @@ namespace states {
             exitHandler: () => {}
         };
         _isActive: boolean;
+        _startTime = 0;
+        _runningTime = 0;
         _loopUpdateHandlers: (() => void)[] = [];
 
         constructor(props: StateProps) {
@@ -104,8 +114,15 @@ namespace states {
             return this._props.id;
         }
 
+        get runningTime() {
+            return this._runningTime;
+        }
+
         enter() {
             this._isActive = true;
+            this._startTime = input.runningTime();
+            console.log(this._startTime)
+            this._runningTime = 0;
             this._props.enterHandler();
             this._startLoops();
         }
@@ -128,6 +145,7 @@ namespace states {
             this._loopUpdateHandlers.forEach(handler => {
                 control.inBackground(() => {
                     while (this._isActive) {
+                        this._runningTime = input.runningTime() - this._startTime;
                         handler()
                     }
                 });
@@ -205,6 +223,10 @@ namespace states {
             return this._previousState.id;
         }
 
+        get runningTime() {
+            return this._currentState.runningTime;
+        }
+
         setChangeHandler(handler: () => void) {
             this._changeHandler = handler;
         }
@@ -220,7 +242,7 @@ namespace states {
             if (previous && previous.id === id) return;
             const next = this._states[id];
             if (!next) {
-                // TODO: Warn?
+                console.warn(`state ${id} not defined!`)
                 return;
             };
             this._currentState = next;
