@@ -2,7 +2,7 @@
 //% color=#0fbc11
 //% groups="['Main state', 'Custom states']"
 namespace states {
-    
+
     const NONE = -1;
 
     //% shim=ENUM_GET
@@ -21,8 +21,8 @@ namespace states {
     //% id.shadow="state_enum_shim"
     //% weight=100
     //% group="Main state"
-    export function defaultSetStateEnter(id: number, handleEnter: () => void) {
-        defaultStateMachine.setStateEnter(id, handleEnter);
+    export function defaultSetStateEnter(id: number, enterHandler: () => void) {
+        defaultStateMachine.setStateEnter(id, enterHandler);
     }
 
     //% block="go to $id"
@@ -37,16 +37,16 @@ namespace states {
     //% id.shadow="state_enum_shim"
     //% weight=80
     //% group="Main state"
-    export function defaultSetStateExit(id: number, handleExit: () => void) {
-        defaultStateMachine.setStateExit(id, handleExit);
+    export function defaultSetStateExit(id: number, exitHandler: () => void) {
+        defaultStateMachine.setStateExit(id, exitHandler);
     }
 
     //% block="while $id"
     //% id.shadow="state_enum_shim"
     //% weight=85
     //% group="Main state"
-    export function defaultSetStateLoopUpdate(id: number, handleLoopUpdate: () => void) {
-        defaultStateMachine.setStateLoopUpdate(id, handleLoopUpdate);
+    export function defaultSetStateLoopUpdate(id: number, loopUpdateHandler: () => void) {
+        defaultStateMachine.setStateLoopUpdate(id, loopUpdateHandler);
     }
 
     //% block="on state change"
@@ -81,19 +81,22 @@ namespace states {
 
     export type StateProps = {
         id: number;
-        handleEnter?: () => void;
-        handleExit?: () => void;
-        handleLoopUpdate?: () => void;
+        enterHandler?: () => void;
+        exitHandler?: () => void;
+        loopUpdateHandler?: () => void;
     }
 
     export class State {
-        _props: StateProps;
+        _props: StateProps = {
+            id: NONE,
+            enterHandler: () => {},
+            exitHandler: () => {}
+        };
         _isActive: boolean;
+        _loopUpdateHandlers: (() => void)[] = [];
+
         constructor(props: StateProps) {
-            props.handleEnter = props.handleEnter || (() => {});
-            props.handleExit = props.handleExit || (() => {});
-            props.handleLoopUpdate = props.handleLoopUpdate || (() => {});
-            this._props = props;
+            this.updateProps(props);
             this._isActive = false;
         }
 
@@ -103,28 +106,32 @@ namespace states {
 
         enter() {
             this._isActive = true;
-            this._props.handleEnter();
-            if (this._props.handleLoopUpdate) {
-                this._startLoop();
-            }
+            this._props.enterHandler();
+            this._startLoops();
         }
 
         exit() {
             this._isActive = false;
-            this._props.handleExit();
+            this._props.exitHandler();
         }
 
-        updateProps(props:StateProps) {
-            this._props.handleEnter = props.handleEnter || this._props.handleEnter;
-            this._props.handleExit = props.handleExit || this._props.handleExit;
-            this._props.handleLoopUpdate = props.handleLoopUpdate || this._props.handleLoopUpdate;
+        updateProps(props: StateProps) {
+            this._props.id = props.id;
+            this._props.enterHandler = props.enterHandler || this._props.enterHandler;
+            this._props.exitHandler = props.exitHandler || this._props.exitHandler;
+            if (props.loopUpdateHandler) {
+                this._loopUpdateHandlers.push(props.loopUpdateHandler);
+            }
         }
 
-        _startLoop() {
-            control.inBackground(() => {
-                while(this._isActive)
-                    this._props.handleLoopUpdate();
-            })
+        _startLoops() {
+            this._loopUpdateHandlers.forEach(handler => {
+                control.inBackground(() => {
+                    while (this._isActive) {
+                        handler()
+                    }
+                });
+            });
         }
     }
 
@@ -141,18 +148,18 @@ namespace states {
     }
 
     export class StateMachine {
-        _states: {[key: number]: State};
+        _states: { [key: number]: State };
         _currentState: State;
         _previousState: State;
-        _changeHandler = () => {};
+        _changeHandler = () => { };
 
         constructor() {
             this._states = {};
             this.addState({
                 id: NONE,
-                handleEnter: () => {},
-                handleExit: () => {},
-                handleLoopUpdate: () => {},
+                enterHandler: () => { },
+                exitHandler: () => { },
+                loopUpdateHandler: () => { },
             });
             this.setState(NONE);
         }
@@ -168,16 +175,16 @@ namespace states {
         //% id.shadow="custom_state_enum_shim"
         //% weight=100
         //% group="Custom states"
-        setStateEnter(id: number, handleEnter: () => void) {
-            this.updateOrAddState({ id, handleEnter });
+        setStateEnter(id: number, enterHandler: () => void) {
+            this.updateOrAddState({ id, enterHandler });
         }
 
-        setStateExit(id: number, handleExit: () => void) {
-            this.updateOrAddState({ id, handleExit });
+        setStateExit(id: number, exitHandler: () => void) {
+            this.updateOrAddState({ id, exitHandler });
         }
 
-        setStateLoopUpdate(id: number, handleLoopUpdate: () => void) {
-            this.updateOrAddState({ id, handleLoopUpdate });
+        setStateLoopUpdate(id: number, loopUpdateHandler: () => void) {
+            this.updateOrAddState({ id, loopUpdateHandler });
         }
 
         updateOrAddState(props: StateProps) {
@@ -188,7 +195,7 @@ namespace states {
             }
         }
 
-        get currentId () { 
+        get currentId() {
             if (!this._currentState) return NONE
             return this._currentState.id;
         }
@@ -232,7 +239,7 @@ namespace states {
         }
 
         has(id: number) {
-           return !!this._states[id]; 
+            return !!this._states[id];
         }
     }
 
