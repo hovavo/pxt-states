@@ -38,7 +38,7 @@ namespace states {
     //% weight=80
     //% group="Main state"
     export function defaultSetStateExit(id: number, handleExit: () => void) {
-        defaultStateMachine.setStateEnter(id, handleExit);
+        defaultStateMachine.setStateExit(id, handleExit);
     }
 
     //% block="while state is $id"
@@ -110,8 +110,8 @@ namespace states {
         }
 
         exit() {
-            this._props.handleExit();
             this._isActive = false;
+            this._props.handleExit();
         }
 
         updateProps(props:StateProps) {
