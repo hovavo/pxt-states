@@ -1,22 +1,32 @@
+## StatesBit
+State machine for micro:bit
 
-> Open this page at [https://hovavo.github.io/pxt-states/](https://hovavo.github.io/pxt-states/)
-
-## Use as Extension
-
-This repository can be added as an **extension** in MakeCode.
-
-* open [https://makecode.microbit.org/](https://makecode.microbit.org/)
-* click on **New Project**
-* click on **Extensions** under the gearwheel menu
-* search for **https://github.com/hovavo/pxt-states** and import
-
-## Edit this project
-
-To edit this repository in MakeCode.
-
-* open [https://makecode.microbit.org/](https://makecode.microbit.org/)
-* click on **Import** then click on **Import URL**
-* paste **https://github.com/hovavo/pxt-states** and click import
+```blocks
+enum States {
+    Default,
+    Active,
+    Inactive
+}
+states.setEnterHandler(States.Active, function () {
+    basic.showIcon(IconNames.Happy)
+})
+states.addLoopHandler(States.Active, function () {
+    led.plotBarGraph(
+    input.lightLevel(),
+    255
+    )
+})
+states.setEnterHandler(States.Inactive, function () {
+    basic.showIcon(IconNames.Sad)
+})
+basic.forever(function () {
+    if (input.lightLevel() > 10) {
+        states.setState(States.Active)
+    } else {
+        states.setState(States.Inactive)
+    }
+})
+```
 
 #### Metadata (used for search, rendering)
 
