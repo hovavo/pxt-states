@@ -1,11 +1,11 @@
 
 //% color=#0fbc11
-//% groups="['Main state', 'Custom states']"
 namespace states {
 
     const NONE = -1;
 
     //% shim=ENUM_GET
+    //% advanced=true
     //% blockId=state_enum_shim
     //% block="$arg"
     //% enumName="States"
@@ -17,28 +17,28 @@ namespace states {
         return arg;
     }
 
-    //% block="on $id"
+    //% block="go to $id"
     //% id.shadow="state_enum_shim"
     //% weight=100
     //% group="Main state"
-    export function defaultSetStateEnter(id: number, enterHandler: () => void) {
-        defaultStateMachine.setStateEnter(id, enterHandler);
+    export function defaulSetState(id: number) {
+        defaultStateMachine.setState(id);
     }
 
-    //% block="go to $id"
+    //% block="on $id"
     //% id.shadow="state_enum_shim"
     //% weight=90
     //% group="Main state"
-    export function defaulSetState(id: number) {
-        defaultStateMachine.setState(id);
+    export function defaultSetStateEnter(id: number, enterHandler: () => void) {
+        defaultStateMachine.setStateEnter(id, enterHandler);
     }
 
     //% block="after $id"
     //% id.shadow="state_enum_shim"
     //% weight=80
     //% group="Main state"
-    export function defaultSetStateExit(id: number, exitHandler: () => void) {
-        defaultStateMachine.setStateExit(id, exitHandler);
+    export function defaultAddStateExit(id: number, exitHandler: () => void) {
+        defaultStateMachine.addStateExit(id, exitHandler);
     }
 
     //% block="while $id"
@@ -51,6 +51,7 @@ namespace states {
     }
 
     //% block="on state change"
+    //% advanced=true 
     //% weight=70
     //% group="Main state"
     export function defaultSetChangeHandler(handler: () => void) {
@@ -58,6 +59,7 @@ namespace states {
     }
 
     //% block="state is $id"
+    //% advanced=true
     //% id.shadow="state_enum_shim"
     //% weight=60
     //% group="Main state"
@@ -66,6 +68,7 @@ namespace states {
     }
 
     //% block="previous state was $id"
+    //% advanced=true
     //% id.shadow="state_enum_shim"
     //% weight=55
     //% group="Main state"
@@ -73,16 +76,14 @@ namespace states {
         return defaultStateMachine.matchPrevious(id);
     }
 
-    //% block="running time"
-    //% weight=55
+    //% block="state time"
+    //% advanced=true
+    //% weight=52
     //% group="Main state"
     export function defaultRunningTime() {
         return defaultStateMachine.runningTime;
     }
 
-    //% block="new state machine"
-    //% blockSetVariable=myStateMachine
-    //% group="Custom states"
     export function addStateMachine() {
         return new StateMachine();
     }
@@ -102,7 +103,6 @@ namespace states {
         };
         _isActive: boolean;
         _startTime = 0;
-        _runningTime = 0;
         _loopUpdateHandlers: (() => void)[] = [];
 
         constructor(props: StateProps) {
@@ -115,14 +115,11 @@ namespace states {
         }
 
         get runningTime() {
-            return this._runningTime;
+            return this._startTime = input.runningTime();
         }
 
         enter() {
             this._isActive = true;
-            this._startTime = input.runningTime();
-            console.log(this._startTime)
-            this._runningTime = 0;
             this._props.enterHandler();
             this._startLoops();
         }
@@ -145,24 +142,11 @@ namespace states {
             this._loopUpdateHandlers.forEach(handler => {
                 control.inBackground(() => {
                     while (this._isActive) {
-                        this._runningTime = input.runningTime() - this._startTime;
                         handler()
                     }
                 });
             });
         }
-    }
-
-    //% shim=ENUM_GET
-    //% blockId=custom_state_enum_shim
-    //% block="$arg"
-    //% enumName="CustomStates"
-    //% enumMemberName="state"
-    //% enumPromptHint="e.g. Waiting, Ready, ..."
-    //% enumInitialMembers="Default"
-    //% group="Custom states"
-    export function _customStateEnumShim(arg: number) {
-        return arg;
     }
 
     export class StateMachine {
@@ -186,18 +170,11 @@ namespace states {
             this._states[props.id] = new State(props);
         }
 
-        //% block="when $this is $id"
-        //% handlerStatement
-        //% this.defl=myStateMachine
-        //% this.shadow=variables_get
-        //% id.shadow="custom_state_enum_shim"
-        //% weight=100
-        //% group="Custom states"
         setStateEnter(id: number, enterHandler: () => void) {
             this.updateOrAddState({ id, enterHandler });
         }
 
-        setStateExit(id: number, exitHandler: () => void) {
+        addStateExit(id: number, exitHandler: () => void) {
             this.updateOrAddState({ id, exitHandler });
         }
 
@@ -231,12 +208,6 @@ namespace states {
             this._changeHandler = handler;
         }
 
-        //% block="set $this to $id"
-        //% this.defl=myStateMachine
-        //% this.shadow=variables_get
-        //% id.shadow="custom_state_enum_shim"
-        //% weight=90
-        //% group="Custom states"
         setState(id: number) {
             const previous = this._currentState;
             if (previous && previous.id === id) return;
