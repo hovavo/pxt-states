@@ -7,23 +7,23 @@ enum States {
     Active,
     Inactive
 }
-states.setEnterHandler(States.Active, function () {
+states.setEnterHandler(1, function () {
     basic.showIcon(IconNames.Happy)
 })
-states.addLoopHandler(States.Active, function () {
+states.addLoopHandler(1, function () {
     led.plotBarGraph(
     input.lightLevel(),
     255
     )
 })
-states.setEnterHandler(States.Inactive, function () {
+states.setEnterHandler(2, function () {
     basic.showIcon(IconNames.Sad)
 })
 basic.forever(function () {
     if (input.lightLevel() > 10) {
-        states.setState(States.Active)
+        states.setState(1)
     } else {
-        states.setState(States.Inactive)
+        states.setState(2)
     }
 })
 ```
