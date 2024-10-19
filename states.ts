@@ -1,9 +1,12 @@
 
-//% color=#0fbc11
+//% color=#0fbc11 icon="\uf0e8"
 namespace states {
 
     const NONE = -1;
 
+    /**
+     * State identifier
+     */
     //% shim=ENUM_GET
     //% advanced=true
     //% blockId=state_enum_shim
@@ -17,75 +20,112 @@ namespace states {
         return arg;
     }
 
+    /**
+     * Activate a specified state.
+     * If that state is already active it will not be restarted.
+     * If another state is currently active, it will stop all repeating code and exit.
+     * @param id the state to activate (see States enum)
+     */
     //% block="go to $id"
     //% id.shadow="state_enum_shim"
     //% weight=100
     //% group="Main state"
-    export function defaulSetState(id: number) {
+    export function setState(id: number) {
         defaultStateMachine.setState(id);
     }
 
-    //% block="on $id"
+    /**
+     * Do something when a state is activated
+     * @param id the state to attach the code to (see States enum)
+     * @param enterHandler the code to run on activation
+     */
+    //% block="once in $id"
     //% id.shadow="state_enum_shim"
     //% weight=90
     //% group="Main state"
-    export function defaultSetStateEnter(id: number, enterHandler: () => void) {
-        defaultStateMachine.setStateEnter(id, enterHandler);
+    export function setEnterHandler(id: number, enterHandler: () => void) {
+        defaultStateMachine.setEnterHandler(id, enterHandler);
     }
 
-    //% block="after $id"
+    /**
+     * Do something when a state is deactivated.
+     * The next state will activate only after this code is done.
+     * @param id the state to attach the code to (see States enum)
+     * @param exitHandler the code to run on deactivation
+     */
+    //% block="when leaving $id"
     //% id.shadow="state_enum_shim"
     //% weight=80
     //% group="Main state"
-    export function defaultAddStateExit(id: number, exitHandler: () => void) {
-        defaultStateMachine.addStateExit(id, exitHandler);
+    export function setExitHandler(id: number, exitHandler: () => void) {
+        defaultStateMachine.setExitHandler(id, exitHandler);
     }
 
-    //% block="while $id"
+    /**
+     * Do something repeatedly while a state is active.
+     * Multiple instances of this block can be define for any state.
+     * This code will start repeating after the activation block is done, and before the deactivation block is started.
+     * @param id the state to attach the code to (see States enum)
+     * @param loopUpdateHandler the code to run on repeatedly
+     */
+    //% block="repeat while in $id"
     //% blockAllowMultiple=1
     //% id.shadow="state_enum_shim"
     //% weight=85
     //% group="Main state"
-    export function defaultSetStateLoopUpdate(id: number, loopUpdateHandler: () => void) {
-        defaultStateMachine.setStateLoopUpdate(id, loopUpdateHandler);
+    export function addLoopHandler(id: number, loopUpdateHandler: () => void) {
+        defaultStateMachine.addLoopHandler(id, loopUpdateHandler);
     }
 
+    /**
+     * Do something whenever a state has changed
+     * @param handler the code to run on deactivation
+     */
     //% block="on state change"
     //% advanced=true 
     //% weight=70
     //% group="Main state"
-    export function defaultSetChangeHandler(handler: () => void) {
+    export function setChangeHandler(handler: () => void) {
         defaultStateMachine.setChangeHandler(handler);
     }
 
+    /**
+     * Returns true if a given state is the currently active one 
+     * @param id the state to match
+     */
     //% block="state is $id"
     //% advanced=true
     //% id.shadow="state_enum_shim"
     //% weight=60
     //% group="Main state"
-    export function defaultMatchCurrent(id: number) {
+    export function matchCurrent(id: number) {
         return defaultStateMachine.matchCurrent(id);
     }
 
+    /**
+     * Returns true if a given state preceeded the currently active one
+     * @param id the state to match
+     */
     //% block="previous state was $id"
     //% advanced=true
     //% id.shadow="state_enum_shim"
     //% weight=55
     //% group="Main state"
-    export function defaultMatchPrevious(id: number) {
+    export function matchPrevious(id: number) {
         return defaultStateMachine.matchPrevious(id);
     }
 
+    // TODO: defaultMatchNext
+
+    /**
+     * Return the time (milliseconds) that passed since the current state was activated
+     */
     //% block="state time"
     //% advanced=true
     //% weight=52
     //% group="Main state"
-    export function defaultRunningTime() {
+    export function runningTime() {
         return defaultStateMachine.runningTime;
-    }
-
-    export function addStateMachine() {
-        return new StateMachine();
     }
 
     export type StateProps = {
@@ -171,15 +211,15 @@ namespace states {
             this._states[props.id] = new State(props);
         }
 
-        setStateEnter(id: number, enterHandler: () => void) {
+        setEnterHandler(id: number, enterHandler: () => void) {
             this.updateOrAddState({ id, enterHandler });
         }
 
-        addStateExit(id: number, exitHandler: () => void) {
+        setExitHandler(id: number, exitHandler: () => void) {
             this.updateOrAddState({ id, exitHandler });
         }
 
-        setStateLoopUpdate(id: number, loopUpdateHandler: () => void) {
+        addLoopHandler(id: number, loopUpdateHandler: () => void) {
             this.updateOrAddState({ id, loopUpdateHandler });
         }
 
@@ -237,5 +277,5 @@ namespace states {
         }
     }
 
-    export const defaultStateMachine = new StateMachine();
+    const defaultStateMachine = new StateMachine();
 }
