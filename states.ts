@@ -142,7 +142,8 @@ namespace states {
             this._loopUpdateHandlers.forEach(handler => {
                 control.inBackground(() => {
                     while (this._isActive) {
-                        handler()
+                        handler();
+                        basic.pause(1);
                     }
                 });
             });
