@@ -1,7 +1,6 @@
 
 //% color=#0fbc11 icon="\uf0e8"
 namespace states {
-
     const NONE = -1;
 
     /**
