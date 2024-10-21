@@ -30,7 +30,7 @@ namespace states {
     //% weight=100
     //% group="Main state"
     export function setState(id: number) {
-        defaultStateMachine.setState(id);
+        mainStateMachine.setState(id);
     }
 
     /**
@@ -38,12 +38,12 @@ namespace states {
      * @param id the state to attach the code to (see States enum)
      * @param enterHandler the code to run on activation
      */
-    //% block="once in $id"
+    //% block="on $id start"
     //% id.shadow="state_enum_shim"
     //% weight=90
     //% group="Main state"
     export function setEnterHandler(id: number, enterHandler: () => void) {
-        defaultStateMachine.setEnterHandler(id, enterHandler);
+        mainStateMachine.setEnterHandler(id, enterHandler);
     }
 
     /**
@@ -52,12 +52,12 @@ namespace states {
      * @param id the state to attach the code to (see States enum)
      * @param exitHandler the code to run on deactivation
      */
-    //% block="when leaving $id"
+    //% block="on $id exit"
     //% id.shadow="state_enum_shim"
     //% weight=80
     //% group="Main state"
     export function setExitHandler(id: number, exitHandler: () => void) {
-        defaultStateMachine.setExitHandler(id, exitHandler);
+        mainStateMachine.setExitHandler(id, exitHandler);
     }
 
     /**
@@ -73,7 +73,7 @@ namespace states {
     //% weight=85
     //% group="Main state"
     export function addLoopHandler(id: number, loopUpdateHandler: () => void) {
-        defaultStateMachine.addLoopHandler(id, loopUpdateHandler);
+        mainStateMachine.addLoopHandler(id, loopUpdateHandler);
     }
 
     /**
@@ -85,7 +85,7 @@ namespace states {
     //% weight=70
     //% group="Main state"
     export function setChangeHandler(handler: () => void) {
-        defaultStateMachine.setChangeHandler(handler);
+        mainStateMachine.setChangeHandler(handler);
     }
 
     /**
@@ -98,7 +98,7 @@ namespace states {
     //% weight=60
     //% group="Main state"
     export function matchCurrent(id: number) {
-        return defaultStateMachine.matchCurrent(id);
+        return mainStateMachine.matchCurrent(id);
     }
 
     /**
@@ -111,20 +111,32 @@ namespace states {
     //% weight=55
     //% group="Main state"
     export function matchPrevious(id: number) {
-        return defaultStateMachine.matchPrevious(id);
+        return mainStateMachine.matchPrevious(id);
     }
 
-    // TODO: defaultMatchNext
+    /**
+     * Returns true if a given state matches the next active one.
+     * This is available only within `on exit` blocks 
+     * @param id the state to match
+     */
+    //% block="next state is $id"
+    //% advanced=true
+    //% id.shadow="state_enum_shim"
+    //% weight=55
+    //% group="Main state"
+    export function matchNext(id: number) {
+        return mainStateMachine.matchNext(id);
+    }
 
     /**
      * Return the time (milliseconds) that passed since the current state was activated
      */
-    //% block="state time"
+    //% block="time in state"
     //% advanced=true
     //% weight=52
     //% group="Main state"
     export function runningTime() {
-        return defaultStateMachine.runningTime;
+        return mainStateMachine.runningTime;
     }
 
     export type StateProps = {
@@ -193,6 +205,7 @@ namespace states {
         _states: { [key: number]: State };
         _currentState: State;
         _previousState: State;
+        _nextState: State;
         _changeHandler = () => { };
 
         constructor() {
@@ -240,6 +253,11 @@ namespace states {
             return this._previousState.id;
         }
 
+        get nextId() {
+            if (!this._nextState) return NONE
+            return this._nextState.id;
+        }
+
         get runningTime() {
             return this._currentState.runningTime;
         }
@@ -256,11 +274,12 @@ namespace states {
                 console.warn(`state ${id} not defined!`)
                 return;
             };
-            this._currentState = next;
-            this._previousState = previous;
+            this._nextState = next;
             if (previous) previous.exit();
-            next.enter();
+            this._previousState = previous;
+            this._currentState = next;
             this._changeHandler();
+            next.enter();
         }
 
         matchCurrent(id: number) {
@@ -271,10 +290,14 @@ namespace states {
             return this.previousId === id;
         }
 
+        matchNext(id: number) {
+            return this.nextId === id;
+        }
+
         has(id: number) {
             return !!this._states[id];
         }
     }
 
-    const defaultStateMachine = new StateMachine();
+    const mainStateMachine = new StateMachine();
 }
