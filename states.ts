@@ -72,7 +72,6 @@ namespace states {
 
     /**
      * Returns the currently active state id
-     * @param id the state to match
      */
     //% block="current state"
     //% advanced=true
@@ -80,6 +79,29 @@ namespace states {
     //% group="Main state"
     export function currentState() {
         return mainStateMachine.currentId;
+    }
+
+    /**
+     * Returns the previously active state id
+     */
+    //% block="previous state"
+    //% advanced=true
+    //% weight=65
+    //% group="Main state"
+    export function previousState() {
+        return mainStateMachine.previousId;
+    }
+
+    /**
+     * Returns the next active state id.
+     * This is available only within `on exit` blocks
+     */
+    //% block="next state"
+    //% advanced=true
+    //% weight=65
+    //% group="Main state"
+    export function nextState() {
+        return mainStateMachine.nextId;
     }
 
     /**
@@ -134,14 +156,16 @@ namespace states {
     }
 
     /**
-     * Return the time (milliseconds) that passed since the current state was activated
+     * Show state changes in the console
      */
-    //% block="debug states"
+    //% block="debug states || $value"
     //% advanced=true
     //% weight=51
+    //% value.defl=true
+    //% value.shadow="toggleOnOff"
     //% group="Main state"
-    export function debugOn() {
-        debugStateChange = true;
+    export function debugOn(value: boolean = true) {
+        debugStateChange = value;
     }
 
     export type StateProps = {
@@ -229,7 +253,7 @@ namespace states {
         }
 
         addState(props: StateProps) {
-            this._states[props.id] = new State(props);
+            this._states[clean(props.id)] = new State(props);
         }
 
         setEnterHandler(id: string, enterHandler: () => void) {
@@ -245,9 +269,9 @@ namespace states {
         }
 
         updateOrAddState(props: StateProps) {
-            props.id = clean(props.id);
-            if (this.has(props.id)) {
-                this._states[props.id].updateProps(props);
+            const state = this.getState(props.id);
+            if (state) {
+                state.updateProps(props);
             } else {
                 this.addState(props);
             }
@@ -277,10 +301,9 @@ namespace states {
         }
 
         setState(id: string) {
-            id = clean(id);
+            if (clean(id) === this.currentId) return;
             const previous = this._currentState;
-            if (previous && previous.id === id) return;
-            const next = this._states[id];
+            const next = this.getState(id);
             if (!next) {
                 logString(`Warning: state ${id} not defined!`);
                 return;
@@ -292,6 +315,10 @@ namespace states {
             this._changeHandler();
             logString(this._currentState.toString());
             next.enter();
+        }
+
+        getState(id: string) {
+            return this._states[clean(id)];
         }
 
         matchCurrent(id: string) {
@@ -307,7 +334,7 @@ namespace states {
         }
 
         has(id: string) {
-            return !!this._states[clean(id)];
+            return !!this.getState(id);
         }
     }
 
