@@ -1,7 +1,7 @@
 
 //% color=#0fbc11 icon="\uf0e8"
 namespace states {
-    const NONE = -1;
+    const ID_NONE = -1;
 
     /**
      * State identifier
@@ -15,7 +15,7 @@ namespace states {
     //% enumPromptHint="e.g. Waiting, Ready, ..."
     //% enumInitialMembers="Default"
     //% group="Main state"
-    export function _stateEnumShim(arg: number) {
+    export function _stateEnumField(arg: number) {
         return arg;
     }
 
@@ -148,7 +148,7 @@ namespace states {
 
     export class State {
         _props: StateProps = {
-            id: NONE,
+            id: ID_NONE,
             enterHandler: () => {},
             exitHandler: () => {}
         };
@@ -211,12 +211,12 @@ namespace states {
         constructor() {
             this._states = {};
             this.addState({
-                id: NONE,
+                id: ID_NONE,
                 enterHandler: () => { },
                 exitHandler: () => { },
                 loopUpdateHandler: () => { },
             });
-            this.setState(NONE);
+            this.setState(ID_NONE);
         }
 
         addState(props: StateProps) {
@@ -244,17 +244,17 @@ namespace states {
         }
 
         get currentId() {
-            if (!this._currentState) return NONE
+            if (!this._currentState) return ID_NONE
             return this._currentState.id;
         }
 
         get previousId() {
-            if (!this._previousState) return NONE
+            if (!this._previousState) return ID_NONE
             return this._previousState.id;
         }
 
         get nextId() {
-            if (!this._nextState) return NONE
+            if (!this._nextState) return ID_NONE
             return this._nextState.id;
         }
 
