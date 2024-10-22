@@ -1,24 +1,6 @@
 
 //% color=#0fbc11 icon="\uf0e8"
 namespace states {
-    const ID_NONE = -1;
-
-    /**
-     * State identifier
-     */
-    //% shim=ENUM_GET
-    //% advanced=true
-    //% blockId=state_enum_shim
-    //% block="$arg"
-    //% enumName="States"
-    //% enumMemberName="state"
-    //% enumPromptHint="e.g. Waiting, Ready, ..."
-    //% enumInitialMembers="Default"
-    //% group="Main state"
-    export function _stateEnumField(arg: number) {
-        return arg;
-    }
-
     /**
      * Activate a specified state.
      * If that state is already active it will not be restarted.
@@ -26,10 +8,10 @@ namespace states {
      * @param id the state to activate (see States enum)
      */
     //% block="go to $id"
-    //% id.shadow="state_enum_shim"
     //% weight=100
+    //% id.defl="Ready"
     //% group="Main state"
-    export function setState(id: number) {
+    export function setState(id: string) {
         mainStateMachine.setState(id);
     }
 
@@ -39,10 +21,10 @@ namespace states {
      * @param enterHandler the code to run on activation
      */
     //% block="on $id start"
-    //% id.shadow="state_enum_shim"
     //% weight=90
+    //% id.defl="Ready"
     //% group="Main state"
-    export function setEnterHandler(id: number, enterHandler: () => void) {
+    export function setEnterHandler(id: string, enterHandler: () => void) {
         mainStateMachine.setEnterHandler(id, enterHandler);
     }
 
@@ -53,10 +35,10 @@ namespace states {
      * @param exitHandler the code to run on deactivation
      */
     //% block="on $id exit"
-    //% id.shadow="state_enum_shim"
     //% weight=80
+    //% id.defl="Ready"
     //% group="Main state"
-    export function setExitHandler(id: number, exitHandler: () => void) {
+    export function setExitHandler(id: string, exitHandler: () => void) {
         mainStateMachine.setExitHandler(id, exitHandler);
     }
 
@@ -69,10 +51,10 @@ namespace states {
      */
     //% block="repeat while in $id"
     //% blockAllowMultiple=1
-    //% id.shadow="state_enum_shim"
     //% weight=85
+    //% id.defl="Ready"
     //% group="Main state"
-    export function addLoopHandler(id: number, loopUpdateHandler: () => void) {
+    export function addLoopHandler(id: string, loopUpdateHandler: () => void) {
         mainStateMachine.addLoopHandler(id, loopUpdateHandler);
     }
 
@@ -89,15 +71,27 @@ namespace states {
     }
 
     /**
+     * Returns the currently active state id
+     * @param id the state to match
+     */
+    //% block="current state"
+    //% advanced=true
+    //% weight=65
+    //% group="Main state"
+    export function currentState() {
+        return mainStateMachine.currentId;
+    }
+
+    /**
      * Returns true if a given state is the currently active one 
      * @param id the state to match
      */
     //% block="state is $id"
     //% advanced=true
-    //% id.shadow="state_enum_shim"
     //% weight=60
+    //% id.defl="Ready"
     //% group="Main state"
-    export function matchCurrent(id: number) {
+    export function matchCurrent(id: string) {
         return mainStateMachine.matchCurrent(id);
     }
 
@@ -107,10 +101,10 @@ namespace states {
      */
     //% block="previous state was $id"
     //% advanced=true
-    //% id.shadow="state_enum_shim"
     //% weight=55
+    //% id.defl="Ready"
     //% group="Main state"
-    export function matchPrevious(id: number) {
+    export function matchPrevious(id: string) {
         return mainStateMachine.matchPrevious(id);
     }
 
@@ -121,10 +115,10 @@ namespace states {
      */
     //% block="next state is $id"
     //% advanced=true
-    //% id.shadow="state_enum_shim"
     //% weight=55
+    //% id.defl="Ready"
     //% group="Main state"
-    export function matchNext(id: number) {
+    export function matchNext(id: string) {
         return mainStateMachine.matchNext(id);
     }
 
@@ -139,8 +133,19 @@ namespace states {
         return mainStateMachine.runningTime;
     }
 
+    /**
+     * Return the time (milliseconds) that passed since the current state was activated
+     */
+    //% block="debug states"
+    //% advanced=true
+    //% weight=51
+    //% group="Main state"
+    export function debugOn() {
+        debugStateChange = true;
+    }
+
     export type StateProps = {
-        id: number;
+        id: string;
         enterHandler?: () => void;
         exitHandler?: () => void;
         loopUpdateHandler?: () => void;
@@ -149,8 +154,8 @@ namespace states {
     export class State {
         _props: StateProps = {
             id: ID_NONE,
-            enterHandler: () => {},
-            exitHandler: () => {}
+            enterHandler: () => { },
+            exitHandler: () => { }
         };
         _isActive: boolean;
         _startTime = 0;
@@ -199,10 +204,14 @@ namespace states {
                 });
             });
         }
+
+        toString() {
+            return `State: ${this.id}`;
+        }
     }
 
     export class StateMachine {
-        _states: { [key: number]: State };
+        _states: { [key: string]: State };
         _currentState: State;
         _previousState: State;
         _nextState: State;
@@ -223,19 +232,20 @@ namespace states {
             this._states[props.id] = new State(props);
         }
 
-        setEnterHandler(id: number, enterHandler: () => void) {
+        setEnterHandler(id: string, enterHandler: () => void) {
             this.updateOrAddState({ id, enterHandler });
         }
 
-        setExitHandler(id: number, exitHandler: () => void) {
+        setExitHandler(id: string, exitHandler: () => void) {
             this.updateOrAddState({ id, exitHandler });
         }
 
-        addLoopHandler(id: number, loopUpdateHandler: () => void) {
+        addLoopHandler(id: string, loopUpdateHandler: () => void) {
             this.updateOrAddState({ id, loopUpdateHandler });
         }
 
         updateOrAddState(props: StateProps) {
+            props.id = clean(props.id);
             if (this.has(props.id)) {
                 this._states[props.id].updateProps(props);
             } else {
@@ -266,12 +276,13 @@ namespace states {
             this._changeHandler = handler;
         }
 
-        setState(id: number) {
+        setState(id: string) {
+            id = clean(id);
             const previous = this._currentState;
             if (previous && previous.id === id) return;
             const next = this._states[id];
             if (!next) {
-                console.warn(`state ${id} not defined!`)
+                logString(`Warning: state ${id} not defined!`);
                 return;
             };
             this._nextState = next;
@@ -279,25 +290,36 @@ namespace states {
             this._previousState = previous;
             this._currentState = next;
             this._changeHandler();
+            logString(this._currentState.toString());
             next.enter();
         }
 
-        matchCurrent(id: number) {
-            return this.currentId === id;
+        matchCurrent(id: string) {
+            return this.currentId === clean(id);
         }
 
-        matchPrevious(id: number) {
-            return this.previousId === id;
+        matchPrevious(id: string) {
+            return this.previousId === clean(id);
         }
 
-        matchNext(id: number) {
-            return this.nextId === id;
+        matchNext(id: string) {
+            return this.nextId === clean(id);
         }
 
-        has(id: number) {
-            return !!this._states[id];
+        has(id: string) {
+            return !!this._states[clean(id)];
         }
     }
 
+    function logString(value: string) {
+        if (debugStateChange) {
+            serial.writeLine(value);
+        }
+    }
+
+    let debugStateChange = false;
+
+    const ID_NONE = '__none__';
+    const clean = (id: string) => id.trim().toLowerCase();
     const mainStateMachine = new StateMachine();
 }

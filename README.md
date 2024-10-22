@@ -2,35 +2,24 @@
 State machine for micro:bit
 
 ```blocks
-enum States {
-    Default,
-    Active,
-    Inactive
-}
-states.setEnterHandler(States.Active, function () {
-    basic.showIcon(IconNames.Happy)
+states.setEnterHandler("Ready", function () {
+    basic.showIcon(IconNames.Heart)
 })
-states.addLoopHandler(States.Active, function () {
+states.addLoopHandler("Ready", function () {
     led.plotBarGraph(
     input.lightLevel(),
-    255
+    155
     )
 })
-states.setEnterHandler(States.Inactive, function () {
-    basic.showIcon(IconNames.Sad)
+states.setEnterHandler("Waiting", function () {
+    basic.showIcon(IconNames.SmallDiamond)
 })
+states.debugOn()
 basic.forever(function () {
     if (input.lightLevel() > 10) {
-    	
+        states.setState("Ready")
     } else {
-    	
-    }
-})
-basic.forever(function () {
-    if (input.lightLevel() > 10) {
-        states.setState(States.Active)
-    } else {
-        states.setState(States.Inactive)
+        states.setState("Waiting")
     }
 })
 ```
