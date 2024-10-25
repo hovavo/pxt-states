@@ -86,7 +86,7 @@ namespace states {
      */
     //% block="previous state"
     //% advanced=true
-    //% weight=65
+    //% weight=64
     //% group="Main state"
     export function previousState() {
         return mainStateMachine.previousId;
@@ -98,7 +98,7 @@ namespace states {
      */
     //% block="next state"
     //% advanced=true
-    //% weight=65
+    //% weight=63
     //% group="Main state"
     export function nextState() {
         return mainStateMachine.nextId;
@@ -108,7 +108,7 @@ namespace states {
      * Returns true if a given state is the currently active one 
      * @param id the state to match
      */
-    //% block="state is $id"
+    //% block="current state is $id"
     //% advanced=true
     //% weight=60
     //% id.defl="Ready"
@@ -137,7 +137,7 @@ namespace states {
      */
     //% block="next state is $id"
     //% advanced=true
-    //% weight=55
+    //% weight=54
     //% id.defl="Ready"
     //% group="Main state"
     export function matchNext(id: string) {
