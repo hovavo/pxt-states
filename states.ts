@@ -8,59 +8,61 @@ namespace states {
      * Activate a specified state.
      * If that state is already active it will not be restarted.
      * If another state is currently active, it will stop all repeating code and exit.
-     * @param id the state to activate (see States enum)
+     * @param selector the state to activate. 
      */
-    //% block="go to $input"
+    //% block="go to $selector"
     //% weight=100
-    //% input.defl="Ready"
+    //% selector.defl="Idle"
     //% group="Main state"
-    export function setState(input: string) {
-        const { machine, state } = UserInput.parse(input);
+    export function setState(selector: string) {
+        const { machine, state } = Selector.parse(selector);
         StateMachines.getOrCreate(machine).setState(state);
     }
 
     /**
      * Do something when a state is activated
-     * @param id the state to attach the code to (see States enum)
+     * @param selector the state to attach the code to
      * @param enterHandler the code to run on activation
      */
-    //% block="on $input start"
+    //% block="on start $selector"
     //% weight=90
-    //% input.defl="Ready"
+    //% selector.defl="Idle"
     //% group="Main state"
-    export function setEnterHandler(input: string, enterHandler: () => void) {
-        const { machine, state } = UserInput.parse(input);
+    export function setEnterHandler(selector: string, enterHandler: () => void) {
+        const { machine, state } = Selector.parse(selector);
         StateMachines.getOrCreate(machine).setEnterHandler(state, enterHandler);
     }
 
     /**
      * Do something when a state is deactivated.
      * The next state will activate only after this code is done.
-     * @param id the state to attach the code to (see States enum)
+     * @param selector the state to attach the code to
      * @param exitHandler the code to run on deactivation
      */
-    //% block="on $id exit"
+    //% block="on exit $selector"
     //% weight=80
-    //% id.defl="Ready"
+    //% selector.defl="Idle"
     //% group="Main state"
-    export function setExitHandler(id: string, exitHandler: () => void) {
-        StateMachines.main.setExitHandler(id, exitHandler);
+    export function setExitHandler(selector: string, exitHandler: () => void) {
+        const { machine, state } = Selector.parse(selector);
+        StateMachines.getOrCreate(machine).setExitHandler(state, exitHandler);
     }
 
     /**
      * Do something repeatedly while a state is active.
      * Multiple instances of this block can be define for any state.
      * This code will start repeating after the activation block is done, and before the deactivation block is started.
-     * @param id the state to attach the code to (see States enum)
+     * @param selector the state to attach the code to
      * @param loopUpdateHandler the code to run on repeatedly
      */
-    //% block="repeat while in $id"
+    //% block="repeat in $selector"
     //% blockAllowMultiple=1
     //% weight=85
-    //% id.defl="Ready"
+    //% selector.defl="Idle"
     //% group="Main state"
-    export function addLoopHandler(id: string, loopUpdateHandler: () => void) {
-        StateMachines.main.addLoopHandler(id, loopUpdateHandler);
+    export function addLoopHandler(selector: string, loopUpdateHandler: () => void) {
+        const { machine, state } = Selector.parse(selector);
+        StateMachines.getOrCreate(machine).addLoopHandler(state, loopUpdateHandler);
     }
 
     /**
@@ -111,42 +113,45 @@ namespace states {
 
     /**
      * Returns true if a given state is the currently active one 
-     * @param id the state to match
+     * @param selector the state to match
      */
-    //% block="current state is $id"
+    //% block="current state is $selector"
     //% advanced=true
     //% weight=60
-    //% id.defl="Ready"
+    //% selector.defl="Idle"
     //% group="Main state"
-    export function matchCurrent(id: string) {
-        return StateMachines.main.matchCurrent(id);
+    export function matchCurrent(selector: string) {
+        const { machine, state } = Selector.parse(selector);
+        StateMachines.getOrCreate(machine).matchCurrent(state);
     }
 
     /**
      * Returns true if a given state preceeded the currently active one
-     * @param id the state to match
+     * @param selector the state to match
      */
-    //% block="previous state was $id"
+    //% block="previous state was $selector"
     //% advanced=true
     //% weight=55
-    //% id.defl="Ready"
+    //% selector.defl="Idle"
     //% group="Main state"
-    export function matchPrevious(id: string) {
-        return StateMachines.main.matchPrevious(id);
+    export function matchPrevious(selector: string) {
+        const { machine, state } = Selector.parse(selector);
+        StateMachines.getOrCreate(machine).matchPrevious(state);
     }
 
     /**
      * Returns true if a given state matches the next active one.
      * This is available only within `on exit` blocks 
-     * @param id the state to match
+     * @param selector the state to match
      */
-    //% block="next state is $id"
+    //% block="next state is $selector"
     //% advanced=true
     //% weight=54
-    //% id.defl="Ready"
+    //% selector.defl="Idle"
     //% group="Main state"
-    export function matchNext(id: string) {
-        return StateMachines.main.matchNext(id);
+    export function matchNext(selector: string) {
+        const { machine, state } = Selector.parse(selector);
+        StateMachines.getOrCreate(machine).matchNext(state);
     }
 
     /**
@@ -172,20 +177,18 @@ namespace states {
     export function debugOn(value: boolean = true) {
         debugStateChange = value;
     }
-
     //#endregion
-    //#region Types
 
+    //#region Types
     export type StateProps = {
         id: string;
         enterHandler?: () => void;
         exitHandler?: () => void;
         loopUpdateHandler?: () => void;
     }
-
     //#endregion
-    //#region Classes
 
+    //#region Classes
     export class State {
         static ID_NONE = '__none__';
 
@@ -264,7 +267,7 @@ namespace states {
 
         constructor(id: string) {
             this.id = id;
-            this.addState();
+            this.createState();
             this.deactivate();
         }
 
@@ -272,30 +275,36 @@ namespace states {
             this.setState(State.ID_NONE);
         }
 
-        addState(props: StateProps = null) {
+        createState(props: StateProps = null) {
             const id = props ? props.id : State.ID_NONE;
-            this._states[normalizeString(id)] = new State(props);
+            const state = new State(props);
+            this._states[normalizeString(id)] = state;
+            return state;
+        }
+
+        getState(id: string) {
+            return this._states[normalizeString(id)];
+        }
+
+        getOrCreateState(id: string) {
+            return this.getState(id) || this.createState({ id });
+        }
+
+        updateOrCreateState(props: StateProps) {
+            const state = this.getOrCreateState(props.id);
+            state.updateProps(props);
         }
 
         setEnterHandler(id: string, enterHandler: () => void) {
-            this.updateOrAddState({ id, enterHandler });
+            this.updateOrCreateState({ id, enterHandler });
         }
 
         setExitHandler(id: string, exitHandler: () => void) {
-            this.updateOrAddState({ id, exitHandler });
+            this.updateOrCreateState({ id, exitHandler });
         }
 
         addLoopHandler(id: string, loopUpdateHandler: () => void) {
-            this.updateOrAddState({ id, loopUpdateHandler });
-        }
-
-        updateOrAddState(props: StateProps) {
-            const state = this.getState(props.id);
-            if (state) {
-                state.updateProps(props);
-            } else {
-                this.addState(props);
-            }
+            this.updateOrCreateState({ id, loopUpdateHandler });
         }
 
         get currentId() {
@@ -322,24 +331,22 @@ namespace states {
         }
 
         setState(id: string) {
-            if (normalizeString(id) === this.currentId) return;
-            const previous = this._currentState;
-            const next = this.getState(id);
-            if (!next) {
-                logString(`Warning: state ${id} not defined!`);
-                return;
-            };
-            this._nextState = next;
-            if (previous) previous.exit();
-            this._previousState = previous;
-            this._currentState = next;
-            this._changeHandler();
-            this.debug();
-            next.enter();
-        }
+            if (this.matchCurrent(id)) return;
 
-        getState(id: string) {
-            return this._states[normalizeString(id)];
+            this._previousState = this._currentState;
+            this._nextState = this.getOrCreateState(id);
+            
+            if (this._previousState) {
+                this._previousState.exit();
+                StateMachines.deactivate(this._previousState.id);
+            }
+
+            this._currentState = this._nextState;
+            this._nextState = null;
+
+            this.debug();
+            this._changeHandler();
+            this._currentState.enter();
         }
 
         matchCurrent(id: string) {
@@ -352,10 +359,6 @@ namespace states {
 
         matchNext(id: string) {
             return this.nextId === normalizeString(id);
-        }
-
-        has(id: string) {
-            return !!this.getState(id);
         }
 
         debug() {
@@ -388,34 +391,37 @@ namespace states {
         static getOrCreate(id: string = null) {
             return StateMachines.get(id) || StateMachines.add(id);
         }
-    }
 
-    class UserInput {
-        static parse(input: string): { machine: string | null; state: string } {
-            let separatorIndex = input.indexOf('.');
-            if (separatorIndex !== -1) {
-                const machine = input.substr(0, separatorIndex);
-                const state = input.substr(separatorIndex + 1);
-                return { machine, state };
-            } else {
-                return { machine: null, state: input };
-            }
+        static deactivate(id: string) {
+            const machine = StateMachines.get(id);
+            if (machine) machine.deactivate();
         }
     }
 
+    class Selector {
+        static parse(selector: string): { machine: string | null; state: string } {
+            let separatorIndex = selector.indexOf('.');
+            if (separatorIndex !== -1) {
+                const machine = selector.substr(0, separatorIndex);
+                const state = selector.substr(separatorIndex + 1);
+                return { machine, state };
+            } else {
+                return { machine: null, state: selector };
+            }
+        }
+    }
     //#endregion
+    
     //#region Utilities
     const normalizeString = (id: string) => id.trim().toLowerCase();
-
-    // const parseUserInput = (input: string)
 
     function logString(value: string) {
         if (debugStateChange) {
             serial.writeLine(value);
         }
     }
-
     //#endregion
+
     //#region Initialization
     let debugStateChange = false;    
     StateMachines.main = new StateMachine(StateMachine.MAIN_ID);
