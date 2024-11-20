@@ -122,7 +122,7 @@ namespace states {
     //% group="Main state"
     export function matchCurrent(selector: string) {
         const { machine, state } = Selector.parse(selector);
-        StateMachines.getOrCreate(machine).matchCurrent(state);
+        return StateMachines.getOrCreate(machine).matchCurrent(state);
     }
 
     /**
@@ -136,7 +136,7 @@ namespace states {
     //% group="Main state"
     export function matchPrevious(selector: string) {
         const { machine, state } = Selector.parse(selector);
-        StateMachines.getOrCreate(machine).matchPrevious(state);
+        return StateMachines.getOrCreate(machine).matchPrevious(state);
     }
 
     /**
@@ -151,7 +151,7 @@ namespace states {
     //% group="Main state"
     export function matchNext(selector: string) {
         const { machine, state } = Selector.parse(selector);
-        StateMachines.getOrCreate(machine).matchNext(state);
+        return StateMachines.getOrCreate(machine).matchNext(state);
     }
 
     /**
