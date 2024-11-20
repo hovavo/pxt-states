@@ -226,7 +226,7 @@ namespace states {
         }
 
         updateProps(props: StateProps) {
-            this._props.id = props.id;
+            this._props.id = normalizeString(props.id);
             if (props.enterHandler) {
                 this._props.enterHandler = props.enterHandler;
             }
@@ -266,7 +266,7 @@ namespace states {
         _changeHandler = () => { };
 
         constructor(id: string) {
-            this.id = id;
+            this.id = normalizeString(id);
             this.createState();
             this.deactivate();
         }
@@ -350,6 +350,7 @@ namespace states {
         }
 
         matchCurrent(id: string) {
+            console.log(this.currentId + ", " + normalizeString(id));
             return this.currentId === normalizeString(id);
         }
 
