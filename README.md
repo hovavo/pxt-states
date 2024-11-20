@@ -1,4 +1,4 @@
-## StatesBit
+## States
 State machine for micro:bit
 
 ```blocks
