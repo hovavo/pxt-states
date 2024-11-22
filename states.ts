@@ -350,7 +350,6 @@ namespace states {
         }
 
         matchCurrent(id: string) {
-            console.log(this.currentId + ", " + normalizeString(id));
             return this.currentId === normalizeString(id);
         }
 
