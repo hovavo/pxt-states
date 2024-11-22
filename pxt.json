@@ -9,7 +9,8 @@
     },
     "files": [
         "README.md",
-        "states.ts"
+        "states.ts",
+        "test.ts"
     ],
     "testFiles": [],
     "targetVersions": {

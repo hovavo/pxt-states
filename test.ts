@@ -1,1 +1,10 @@
-// tests go here; this will not be compiled when this package is used as an extension.
+
+states.setEnterHandler("Idle", function() {})
+states.addLoopHandler("Idle", function() {})
+states.setExitHandler("Idle", function() {})
+states.setChangeHandler(function() {})
+states.matchCurrent(states.currentState())
+states.matchNext(states.nextState())
+states.matchNext(states.nextState())
+states.debugOn()
+states.setState("Idle")

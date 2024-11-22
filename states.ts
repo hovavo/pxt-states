@@ -155,17 +155,6 @@ namespace states {
     }
 
     /**
-     * Return the time (milliseconds) that passed since the current state was activated
-     */
-    //% block="time in state"
-    //% advanced=true
-    //% weight=52
-    //% group="Main state"
-    export function runningTime() {
-        return StateMachines.main.runningTime;
-    }
-
-    /**
      * Show state changes in the console
      */
     //% block="debug states || $value"
@@ -208,10 +197,6 @@ namespace states {
 
         get id() {
             return this._props.id;
-        }
-
-        get runningTime() {
-            return this._startTime = input.runningTime();
         }
 
         enter() {
@@ -320,10 +305,6 @@ namespace states {
         get nextId() {
             if (!this._nextState) return State.ID_NONE
             return this._nextState.id;
-        }
-
-        get runningTime() {
-            return this._currentState.runningTime;
         }
 
         setChangeHandler(handler: () => void) {
