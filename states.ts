@@ -10,13 +10,15 @@ namespace states {
      * If another state is currently active, it will stop all repeating code and exit.
      * @param selector the state to activate. 
      */
-    //% block="go to $selector"
+    //% block="go to $selector || if $condition"
     //% weight=100
     //% selector.defl="Idle"
+    //% condition.defl=true
     //% group="Main state"
-    export function setState(selector: string) {
+    export function setState(selector: string, condition: boolean = null) {
         const { machine, state } = Selector.parse(selector);
-        StateMachines.getOrCreate(machine).setState(state);
+        if (condition != false)
+            StateMachines.getOrCreate(machine).setState(state);
     }
 
     /**
