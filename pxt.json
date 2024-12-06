@@ -1,18 +1,17 @@
 {
-    "name": "States",
+    "name": "states",
     "version": "2.0.3",
-    "description": "",
+    "description": "A finite state machine extension for micro:bit",
     "dependencies": {
-        "core": "*",
-        "radio": "*",
-        "microphone": "*"
+        "core": "*"
     },
     "files": [
         "README.md",
-        "states.ts",
+        "states.ts"
+    ],
+    "testFiles": [
         "test.ts"
     ],
-    "testFiles": [],
     "targetVersions": {
         "target": "7.0.51",
         "targetId": "microbit"
@@ -20,6 +19,5 @@
     "supportedTargets": [
         "microbit"
     ],
-    "preferredEditor": "tsprj",
-    "languageRestriction": "javascript-only"
+    "preferredEditor": "tsprj"
 }
