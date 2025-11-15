@@ -31,6 +31,7 @@ namespace states {
     export function setEnterHandler(selector: string, enterHandler: () => void) {
         const { machine, state } = Selector.parse(selector);
         StateMachines.getOrCreate(machine).setEnterHandler(state, enterHandler);
+        if (state === "Default") handleDefaultState();
     }
 
     /**
@@ -63,6 +64,7 @@ namespace states {
     export function addLoopHandler(selector: string, loopUpdateHandler: () => void) {
         const { machine, state } = Selector.parse(selector);
         StateMachines.getOrCreate(machine).addLoopHandler(state, loopUpdateHandler);
+        if (state === "Default") handleDefaultState();
     }
 
     /**
@@ -391,6 +393,26 @@ namespace states {
             }
         }
     }
+
+    let defaultStateDefined = false;
+
+    /**
+     * Called when a "Default" state is defined.
+     * Triggers an automatic setState 10ms after start
+     */
+    function handleDefaultState()
+    {
+        if(defaultStateDefined) return;
+        defaultStateDefined = true;
+        control.inBackground(() => {
+            basic.pause(10);
+            // Set to default is no other state was activated on start
+            if (StateMachines.main.currentId === State.ID_NONE) {
+                StateMachines.main.setState("Default");
+            }
+        });
+    }
+
     //#endregion
     
     //#region Utilities
